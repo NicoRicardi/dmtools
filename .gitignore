@@ -1,4 +1,5 @@
 *.txt
+*.pyc
 *.fchk
 test
 oldversion.py

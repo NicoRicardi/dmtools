@@ -12,7 +12,7 @@ class Error(Exception):
     pass
 
 class otherError(Error):
-    """Mismatch in the number of atoms.
+    """Some error.
 
     Attributes:
         expression -- input expression in which the error occurred
@@ -288,6 +288,24 @@ class DM():
                 for i in range(self.coeffs[s[k]].shape[0]):
                     for j in range(self.coeffs[s[k]].shape[1]):
                         out.write('{: .{dgt}{frmt}} {}'.format(self.coeffs[s[k]][i,j],'\n', dgt=digits,frmt=format_))
+    
+    def to_numpy_txt(self, fname, alpha_only=False):
+        """
+        Note
+        ----
+        writes down to numpy txt. Either 2*alpha or only alpha
+        
+        Parameters
+        ----------
+        fname: str
+            filename or path
+        alpha_only: bool
+            whether it should write only the alpha matrix or alpha,beta
+        """
+        if alpha_only:
+            np.savetxt(fname,self.coeffs["a"])
+        else:
+            np.savetxt(fname,np.multiply(2,self.coeffs["a"]))
                         
     def diff(self, other, spin="a"):
         """
