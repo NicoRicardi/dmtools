@@ -1,4 +1,5 @@
 *.txt
+dmtools.egg-info/
 *.pyc
 *.fchk
 test
