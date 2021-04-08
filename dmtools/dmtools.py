@@ -497,7 +497,7 @@ def get_atoms_sortarr(geom, order, basis):
         the sorting array
     """
     from pyscf import gto
-    mol = gto.M(atom=geom, basis)
+    mol = gto.M(atom=geom, basis=basis)
     tmp = gto.aoslice_by_atom(mol)
     sort_arr = []
     for o in order:
