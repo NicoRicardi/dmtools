@@ -6,6 +6,7 @@ Created on Mon Apr  1 11:24:26 2019
 @author: nico
 """
 import numpy as np
+import itertools as ittl
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -380,6 +381,32 @@ class DM():
         """
         return self.trace(spin) - other.trace(spin)
     
+    def reorder(self, geom, order, basis):
+        """
+        Note
+        ----
+        Reorders the atoms in the density matrix
+        
+        Parameters
+        ----------
+        geom: geom_obj, str
+            geometry object, xyz filename, or xyz str
+        order: np.array
+            the order to use to reorder (e.g. [1,0,3,2,5,4] to swap every two atoms)
+        basis: str
+            basis name or *.nwchem filepath
+            
+        Returns
+        -------
+        DM obj
+            the reordered DM
+        """
+        if geom != str:
+            geom = geom.__str__()
+        sort_arr = get_atoms_sortarr(geom, order, basis)
+        coeffs_a, coeffs_b = reorder(self.coeffs["a"], sort_arr), reorder(self.coeffs["b"], sort_arr)
+        return DM(coeffs_a, coeffs_b, comment="reordered with arr {}".format(order))
+    
 class HFcoeffs:
     """
     HF coefficient matrix class
@@ -449,6 +476,57 @@ class HFcoeffs:
             the absolut difference of absolute values array
         """     
         return acadiff(self,other)
+    
+def get_atoms_sortarr(geom, order, basis):
+    """
+    Note
+    Returns the sorting array, to obtain a DM, where the atoms in "geom" have been rearranged according to "order".
+    
+    Parameters
+    ----------
+    geom: str
+        filename or string of the xyz
+    order: np.array
+        the order to use to reorder (e.g. [1,0,3,2,5,4] to swap every two atoms)
+    basis: str
+        basis name or *.nwchem filepath
+    
+    Returns
+    -------
+    np.array
+        the sorting array
+    """
+    from pyscf import gto
+    mol = gto.M(atom=geom, basis)
+    tmp = gto.aoslice_by_atom(mol)
+    sort_arr = []
+    for o in order:
+        slc = tmp[o][[2,3]]
+        sort_arr.append(np.arange(slc[0], slc[1]))
+    sort_arr = list(ittl.chain.from_iterable(sort_arr))
+    return sort_arr
+
+def reorder(arr, sort_arr):
+    """
+    Parameters
+    ----------
+    arr: np.array
+        array of the density matrix
+    sort_arr: np.array
+        sorting array
+    
+    Returns
+    -------
+    np.array
+        the DM array where the rows have been rearranged
+    """
+    I = np.identity(arr.shape[0])
+    P = I[:, sort_arr] # black magic: rearrange columns of ID matrix
+    M = np.dot(P.T, arr)
+    Q = np.dot(M,P)
+    return Q
+    
+    
     
 def coeffs_from_fchk(fname):
     """
