@@ -62,19 +62,22 @@ def get_rev_order(fname):
 
 def get_sort_arr(atomlist, order):
     import mendeleev as md
+    from sqlalchemy.orm.exc import NoResultFound
     arr = np.array([],dtype=int)
     cntr = 0
     for n,atom in enumerate(atomlist):
         if atom not in order.keys():
             try:
-                ordr=order["p{}".format(md.element(atom).period)]
-            except:
-                print("you don't have the order for this period")
+                ordr = order["p{}".format(md.element(atom).period)]
+            except KeyError:
+                print("Atom {} is in period {}, you don't have this order".format(atom, md.element(atom).period))
+            except NoResultFound:
+                raise NoResultFound("Unrecognised atom: {}".format(atom))
         else:
-            ordr=order[atom]
-        to_app=ordr+cntr
-        arr=np.append(arr,to_app)
-        cntr+=ordr.shape[0]
+            ordr = order[atom]
+        to_app = ordr + cntr
+        arr = np.append(arr, to_app)
+        cntr += ordr.shape[0]
     return arr
         
 def reorder(inp, sort_arr):
